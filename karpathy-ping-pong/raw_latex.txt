@@ -1,0 +1,76 @@
+\\
+L_{ip}^{i} \rightarrow  input\ to\ layer\ i\\
+L_{op}^{i} \rightarrow  output\ of\ layer\ i\\
+h \rightarrow L_{op}^{2}, output\ of\ hidden\ layer\\\
+y_{a} \rightarrow is\ the\ true\ label\ of\ y \\
+y_{p} \rightarrow is\ the\ predicted\ label\ of\ y\\
+y_{p} =  Sigm(Relu(x*W_{1})*W_{2})\\
+
+output\ label = \begin{Bmatrix}
+1 & if\ y_{p} > 0.5 \\
+0 & otherwise
+\end{Bmatrix}
+
+As\ always\ we\ want\ to\ maximize\ the\ probability\ of\ output\ (up/down\ action)\ given\ input\ (game\ state)\\
+\\
+max\ P(Y|X)\\
+max\ \sum_{i}^{N} P(y_{i}|x_{i})\\
+P(y=y_{a}|x) = y_{a}log(y_{p}) + (1-y_{a})log(1-y_{p})\\
+
+For\ ease\ of\ discussion\ lets\ drop \sum_{.}^{.}\ and,\ consider\ only\ one\ example \\
+\\
+max\ P(y|x)\\
+\\
+\frac{\partial \ }{\partial L_{op}^{3}} P(y|x) =
+\frac{\partial \ }{\partial L_{op}^{3}} (y_{a}log(y_{p}) + (1-y_{a})log(1-y_{p}))\\
+= \frac{\partial \ }{\partial L_{op}^{3}} (y_{a}log(L_{op}^{3}) + (1-y_{a})log(1-L_{op}^{3}))\\
+=y_{a}\frac{\partial \ }{\partial L_{op}^{3}} log(L_{op}^{3})+ (1-y_{a})\frac{\partial \ }{\partial L_{op}^{3}} log(1-L_{op}^{3})\\
+\frac{\partial \ }{\partial L_{op}^{3}} P(y|x) = y_{a}\frac{1} {L_{op}^{3}} + (1-y_{a})\frac{-1} {(1-L_{op}^{3})}\ \ \ \ \ \ \leftarrow  \mathbf{(eq.1)}\\
+
+
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = \frac{\partial \ }{\partial L_{op}^{3}} P(y|x)* \frac{\partial \ }{\partial L_{ip}^{3}} L_{op}^{3}\\
+using:\ \frac{\mathrm{d} }{\mathrm{d} x} sigm(x) = sigm(x) (1-sigm(x))\\
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = \frac{\partial \ }{\partial L_{op}^{3}} P(y|x)* L_{op}^{3} (1-L_{op}^{3})\\
+using\ (eq.1)\\
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = (y_{a}\frac{1} {L_{op}^{3}} + (1-y_{a})\frac{-1} {(1-L_{op}^{3})})* L_{op}^{3} (1-L_{op}^{3})\\
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = y_{a} (1-L_{op}^{3})+ (y_{a}-1)L_{op}^{3}\\
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = y_{a}-y_{a}L_{op}^{3} + y_{a}L_{op}^{3}-L_{op}^{3}\\
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = y_{a} - L_{op}^{3}\\
+\frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) = (y_{a} - y_{p})\ \ \ \ \ \ \leftarrow  \mathbf{(eq.2)}\\
+
+
+\frac{\partial \ }{\partial W_{2}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{3}} P(y|x)\ *  \frac{\partial \ }{\partial W_{2}}L_{ip}^{3}\\
+\frac{\partial \ }{\partial W_{2}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{3}} P(y|x)\ *  \frac{\partial \ }{\partial W_{2}} (h*W_{2})\\
+\frac{\partial \ }{\partial W_{2}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{3}} P(y|x)\ *\ h\\
+using\ (eq.2) \\
+\frac{\partial \ }{\partial W_{2}} P(y|x) = (y_{a} - y_{p})\ *\ h\ \ \ \ \ \ \leftarrow  \mathbf{(eq.3)}\\
+
+\frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{3}} P(y|x) *  \frac{\partial \ }{\partial L_{op}^{2}} L_{ip}^{3} * \frac{\partial \ }{\partial L_{ip}^{2}}L_{op}^{2}\\
+\frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) = (y_{a} - y_{p}) *  \frac{\partial \ }{\partial L_{op}^{2}} (L_{op}^{2}*W_{2}) * \frac{\partial \ }{\partial L_{ip}^{2}}L_{op}^{2}\\
+\\
+\frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) = (y_{a} - y_{p}) *  W_{2} * \frac{\partial \ }{\partial L_{ip}^{2}}L_{op}^{2}\ \ \ \ \ \ \leftarrow  \mathbf{(eq.4)}\\
+\\
+\\
+L_{op}^{2} = Relu(L_{ip}^{2})\\
+Since\ Relu\ is\ not\ differntiable\ (kink\ at\ x = 0)\ we\ stick\ to\ sub-derivative\\
+
+\frac{\mathrm{d} }{\mathrm{d} x} max(0,x) = \left\{\begin{matrix}
+1 & x>0\\ 
+0 & x \leq 0
+\end{matrix}\right.\\
+\\
+\\
+substituting\ above\ in\ (eq.4)\\
+\frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) = \left\{\begin{matrix}
+(y_{a} - y_{p}) *  W_{2} & x>0\\ 
+0 & x \leq 0
+\end{matrix}\right.\ \ \ \ \ \ \leftarrow  \mathbf{(eq.5)}\\
+
+\frac{\partial \ }{\partial W_{1}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) *  \frac{\partial \ }{\partial W_{1}}L_{ip}^{2}\\
+\frac{\partial \ }{\partial W_{1}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) *  \frac{\partial \ }{\partial W_{1}} (x*W_{1})\\
+\frac{\partial \ }{\partial W_{1}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) * x\\
+using (eq.5)\\
+\frac{\partial \ }{\partial W_{1}} P(y|x)  = \left\{\begin{matrix}
+(y_{a} - y_{p}) *  W_{2} * x & x>0\\ 
+0 & x \leq 0
+\end{matrix}\right.\ \ \ \ \ \ \leftarrow  \mathbf{(eq.6)}\\

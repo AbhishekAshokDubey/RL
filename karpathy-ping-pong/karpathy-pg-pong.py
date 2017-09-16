@@ -29,29 +29,36 @@ def sigmoid(x):
 
 def prepro(I):
   """ prepro 210x160x3 uint8 frame into 6400 (80x80) 1D float vector """
-  I = I[35:195] # crop
-  I = I[::2,::2,0] # downsample by factor of 2
+#  I = env.reset() # Use this to verify, whats happening
+#  plt.imshow(I)
+  I = I[35:195] # crop and keep only the play area
+  I = I[::2,::2,0] # downsample by factor of 2, take every second row and column, and take only "R" component out of RGB image
   I[I == 144] = 0 # erase background (background type 1)
   I[I == 109] = 0 # erase background (background type 2)
-  I[I != 0] = 1 # everything else (paddles, ball) just set to 1
-  return I.astype(np.float).ravel()
+  I[I != 0] = 1 # everything else (but paddles, ball) just set to 1
+  return I.astype(np.float).ravel() # convert to 1D array and return
 
+
+# discount_rewards(np.array([1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0]))
+# returns: array([ 1., 0.96059601, 0.970299, 0.9801, 0.99, 1., 0.9801, 0.99, 1.])
 def discount_rewards(r):
   """ take 1D float array of rewards and compute discounted reward """
   discounted_r = np.zeros_like(r)
   running_add = 0
-  for t in reversed(xrange(0, r.size)):
+  for t in reversed(range(0, r.size)):
     if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary (pong specific!)
     running_add = running_add * gamma + r[t]
     discounted_r[t] = running_add
   return discounted_r
 
+# Single hidden layer NN, forward pass
 def policy_forward(x):
   h = np.dot(model['W1'], x)
   h[h<0] = 0 # ReLU nonlinearity
   logp = np.dot(model['W2'], h)
   p = sigmoid(logp)
   return p, h # return probability of taking action 2, and hidden state
+
 
 def policy_backward(eph, epdlogp):
   """ backward pass. (eph is array of intermediate hidden states) """
@@ -122,11 +129,11 @@ while True:
 
     # boring book-keeping
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
-    print 'resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward)
+    print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
     if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
     reward_sum = 0
     observation = env.reset() # reset env
     prev_x = None
 
   if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
-    print ('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!')
+    print(('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
