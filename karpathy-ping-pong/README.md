@@ -1,7 +1,7 @@
-This is replication of karpathy's code, for a demo tutorial, with the derivation/ proof provided below.
+This is replication of karpathy's code, for a demo tutorial, with the derivation/ proof provided below.<br/>
 
 The neural network:
-![diagram](https://tgmstat.files.wordpress.com/2013/05/neural_network_example1.png)
+![diagram](https://raw.githubusercontent.com/AbhishekAshokDubey/RL/master/karpathy-ping-pong/nn_diagram.PNG)
 
 ![notations](https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5C%5C%20L_%7Bip%7D%5E%7Bi%7D%20%5Crightarrow%20input%5C%20to%5C%20layer%5C%20i%5C%5C%20L_%7Bop%7D%5E%7Bi%7D%20%5Crightarrow%20output%5C%20of%5C%20layer%5C%20i%5C%5C%20%5C%5C%20h%20%5Crightarrow%20L_%7Bop%7D%5E%7B2%7D%20%28%20output%5C%20of%5C%20hidden%5C%20layer%29%5C%5C%20%5C%5C%20y_%7Ba%7D%20%5Crightarrow%20is%5C%20the%5C%20true%5C%20label%5C%20of%5C%20y%20%5C%5C%20y_%7Bp%7D%20%5Crightarrow%20is%5C%20the%5C%20predicted%5C%20label%5C%20of%5C%20y%5C%5C%20y_%7Bp%7D%20%3D%20Sigm%28Relu%28x*W_%7B1%7D%29*W_%7B2%7D%29%5C%5C%20output%5C%20label%20%3D%20%5Cbegin%7BBmatrix%7D%201%20%26%20if%5C%20y_%7Bp%7D%20%3E%200.5%20%5C%5C%200%20%26%20otherwise%20%5Cend%7BBmatrix%7D)
 
@@ -26,8 +26,10 @@ Since Relu is not differntiable (kink at x = 0) we use sub-derivative
 
 ![](https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5C%5C%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20W_%7B1%7D%7D%20P%28y%7Cx%29%20%3D%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20L_%7Bip%7D%5E%7B2%7D%7D%20P%28y%7Cx%29%20*%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20W_%7B1%7D%7DL_%7Bip%7D%5E%7B2%7D%5C%5C%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20W_%7B1%7D%7D%20P%28y%7Cx%29%20%3D%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20L_%7Bip%7D%5E%7B2%7D%7D%20P%28y%7Cx%29%20*%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20W_%7B1%7D%7D%20%28x*W_%7B1%7D%29%5C%5C%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20W_%7B1%7D%7D%20P%28y%7Cx%29%20%3D%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20L_%7Bip%7D%5E%7B2%7D%7D%20P%28y%7Cx%29%20*%20x%5C%5C%20using%20%28eq.5%29%5C%5C%20%5Cfrac%7B%5Cpartial%20%5C%20%7D%7B%5Cpartial%20W_%7B1%7D%7D%20P%28y%7Cx%29%20%3D%20%5Cleft%5C%7B%5Cbegin%7Bmatrix%7D%20%28y_%7Ba%7D%20-%20y_%7Bp%7D%29%20*%20W_%7B2%7D%20*%20x%20%26%20x%3E0%5C%5C%200%20%26%20x%20%5Cleq%200%20%5Cend%7Bmatrix%7D%5Cright.%5C%20%5C%20%5C%20%5C%20%5C%20%5C%20%5Cleftarrow%20%5Cmathbf%7B%28eq.6%29%7D%5C%5C)
 
+<br/>
+<br/>
 
-Useful tools:
-https://www.codecogs.com/latex/eqneditor.php
-https://go.gliffy.com/go/html5/launch
+Useful tools:<br/>
+https://www.codecogs.com/latex/eqneditor.php<br/>
+https://go.gliffy.com/go/html5/launch<br/>
 https://dillinger.io/
