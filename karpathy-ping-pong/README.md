@@ -1,3 +1,5 @@
+For latest python atari games on windows: https://github.com/AbhishekAshokDubey/atari-py<br/>
+
 This is replication of karpathy's code, for a demo tutorial, with the derivation/ proof provided below.<br/>
 
 The neural network:
