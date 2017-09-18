@@ -3,7 +3,7 @@ For latest python atari games on windows: https://github.com/AbhishekAshokDubey/
 This is replication of karpathy's code, for a demo tutorial, with the derivation/ proof provided below.<br/>
 
 The neural network:
-![diagram](https://raw.githubusercontent.com/AbhishekAshokDubey/RL/master/karpathy-ping-pong/nn_diagram.PNG)
+![diagram](https://raw.githubusercontent.com/AbhishekAshokDubey/RL/master/ping-pong/nn_diagram.PNG)
 
 ![notations](https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5C%5C%20L_%7Bip%7D%5E%7Bi%7D%20%5Crightarrow%20input%5C%20to%5C%20layer%5C%20i%5C%5C%20L_%7Bop%7D%5E%7Bi%7D%20%5Crightarrow%20output%5C%20of%5C%20layer%5C%20i%5C%5C%20%5C%5C%20h%20%5Crightarrow%20L_%7Bop%7D%5E%7B2%7D%20%28%20output%5C%20of%5C%20hidden%5C%20layer%29%5C%5C%20%5C%5C%20y_%7Ba%7D%20%5Crightarrow%20is%5C%20the%5C%20true%5C%20label%5C%20of%5C%20y%20%5C%5C%20y_%7Bp%7D%20%5Crightarrow%20is%5C%20the%5C%20predicted%5C%20label%5C%20of%5C%20y%5C%5C%20y_%7Bp%7D%20%3D%20Sigm%28Relu%28x*W_%7B1%7D%29*W_%7B2%7D%29%5C%5C%20output%5C%20label%20%3D%20%5Cbegin%7BBmatrix%7D%201%20%26%20if%5C%20y_%7Bp%7D%20%3E%200.5%20%5C%5C%200%20%26%20otherwise%20%5Cend%7BBmatrix%7D)
 
