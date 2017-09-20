@@ -1,4 +1,4 @@
-""" Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym. """
+""" Trains an agent with (stochastic) Q Learning on Pong. Uses OpenAI Gym. """
 import numpy as np
 #import cPickle as pickle
 import gym
@@ -13,39 +13,36 @@ batch_size = 10 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
+randomness = 0.1 # initial prob to corrupt (randomness) the action
 render = False
 
 save_freq = 100 # keep zero if you dun want to save model
 plot_freq = 100 # keep zero if you dun want to draw the scores
 
-model_save_path = os.path.join(os.getcwd(),'model_tf_policyGrad','mymodel.ckpt')
+model_save_path = os.path.join(os.getcwd(),'model_QLearning','mymodel.ckpt')
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
 
 # replaces model initializations, forward_prop and back_prop
 class neural_network():
-    def __init__(self, D, H, learning_rate):
+    def __init__(self, D, H, learning_rate):        
         self.input_layer = tf.placeholder(shape=[None,D],dtype=tf.float32)
         self.hidden_layer = slim.fully_connected(self.input_layer, H, activation_fn=tf.nn.relu, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=None)
-        self.output_layer = slim.fully_connected(self.hidden_layer, 1, activation_fn=tf.nn.sigmoid, weights_initializer=tf.contrib.layers.xavier_initializer() ,biases_initializer=None)
+        self.output_layer = slim.fully_connected(self.hidden_layer, 2, activation_fn=tf.nn.sigmoid, weights_initializer=tf.contrib.layers.xavier_initializer() ,biases_initializer=None)
+        
+        self.max_rew_action = tf.argmax(self.output_layer,1)
+        
+        self.updated_Q_vaules = tf.placeholder(shape=[None,2],dtype=tf.float32)
+        self.loss = tf.reduce_sum(tf.square(self.updated_Q_vaules - self.output_layer))
 
-        self.actual_actions = tf.placeholder(shape=[None],dtype=tf.int32)
-        self.game_rewards = tf.placeholder(shape=[None],dtype=tf.float32)
-        
-        comparison = tf.equal(self.actual_actions,tf.constant(1))
-        
-        # loss_fn = Ya(log(Yp)) + (1-Ya)log(Yp)
-        self.log_loss = tf.where(comparison, tf.log(self.output_layer), tf.log(tf.subtract(1.0,self.output_layer)))
-        self.policy_loss = -tf.reduce_mean(self.log_loss * self.game_rewards)
-        
         w_variables = tf.trainable_variables()
         self.gradients = []
         for indx,w in enumerate(w_variables):
             w_holder_var = tf.placeholder(tf.float32,name="w_"+ str(indx))
             self.gradients.append(w_holder_var)
         
-        self.all_gradients = tf.gradients(self.policy_loss,w_variables)
+        self.all_gradients = tf.gradients(self.loss,w_variables)
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         self.apply_grads = optimizer.apply_gradients(zip(self.gradients,w_variables))
         
@@ -64,23 +61,10 @@ def prepro(I):
   return I.astype(np.float).ravel() # convert to 1D array and return
 
 
-# discount_rewards(np.array([1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0]))
-# returns: array([ 1., 0.96059601, 0.970299, 0.9801, 0.99, 1., 0.9801, 0.99, 1.])
-def discount_rewards(r):
-  """ take 1D float array of rewards and compute discounted reward """
-  discounted_r = np.zeros_like(r)
-  running_add = 0
-  for t in reversed(range(0, r.size)):
-    if r[t] != 0: running_add = 0 # reset the sum, since this was a game boundary (pong specific!)
-    running_add = running_add * gamma + r[t]
-    discounted_r[t] = running_add
-  return discounted_r
-
-
 env = gym.make("Pong-v0")
 observation = env.reset()
 prev_x = None # used in computing the difference frame
-xs,hs,dlogps,drs,all_game_scores = [],[],[],[],[]
+xs,hs,dlogps,drs,qs,all_game_scores = [],[],[],[],[],[]
 running_reward = None
 reward_sum = 0
 episode_number = 0
@@ -107,42 +91,50 @@ with tf.Session() as sess:
         x = cur_x - prev_x if prev_x is not None else np.zeros(D)
         prev_x = cur_x
         # forward the policy network and sample an action from the returned probability
-        aprob, h = sess.run([nn.output_layer, nn.hidden_layer], feed_dict={nn.input_layer: np.reshape(x,(1,x.shape[0]))})
+        y, q_vaules = sess.run([nn.max_rew_action, nn.output_layer], feed_dict={nn.input_layer: np.reshape(x,(1,x.shape[0]))})
+        y = y[0]
         # action = 2 is 1
         # action = 3 is 0
-        action = 2 if np.random.uniform() < aprob else 3 # roll the dice!
-        
+        if np.random.uniform() < randomness: y = abs(1-y) # roll the dice!
         # record various intermediates (needed later for backprop)
         xs.append(x) # observation
-        hs.append(h) # hidden state
-        y = 1 if action == 2 else 0 # a "fake label"
+        
+        action = 2 if y else 3
         dlogps.append(y) # grad that encourages the action that was taken to be taken (see http://cs231n.github.io/neural-networks-2/#losses if confused)
         
         # step the environment and get new measurements
         observation, reward, done, info = env.step(action)
+        
+        # reduntant code, but keeping it for clarity of the concepts
+        cur_x_temp = prepro(observation)
+        x_next_temp = cur_x_temp - prev_x
+
         reward_sum += reward
         drs.append(reward) # record reward (has to be done after we call step() to get reward for previous action)
 
+        next_state_q_vaules = sess.run(nn.output_layer, feed_dict={nn.input_layer: np.reshape(x_next_temp,(1,x_next_temp.shape[0]))})
+        max_q_val = np.max(next_state_q_vaules)
+        updated_q_values = q_vaules
+        updated_q_values[0,y] = reward + (gamma * max_q_val) # bellman equation
+#        print(q_vaules,updated_q_values)
+        qs.append(updated_q_values)
+                
         if done: # an episode finished
             episode_number += 1
             # stack together all inputs, hidden states, action gradients, and rewards for this episode
             epx = np.vstack(xs)
-            eph = np.vstack(hs)
-            epdlogp = np.vstack(dlogps)
+            epq = np.vstack(qs)
             epr = np.vstack(drs)
-            xs,hs,dlogps,drs = [],[],[],[] # reset array memory
-            # compute the discounted reward backwards through time
-            discounted_epr = discount_rewards(epr)
-            # standardize the rewards to be unit normal (helps control the gradient estimator variance)
-            discounted_epr -= np.mean(discounted_epr)
-            discounted_epr /= np.std(discounted_epr)
-
-            grads = sess.run(nn.all_gradients, feed_dict = {nn.input_layer: epx, nn.game_rewards:discounted_epr.ravel(), nn.actual_actions: epdlogp.ravel()})
+            xs,qs,drs = [],[],[] # reset array memory
+            
+            grads = sess.run(nn.all_gradients, feed_dict={nn.input_layer: epx, nn.updated_Q_vaules:epq})
             for indx,grad in enumerate(grads):
                 grad_buffer[indx] += grad
                 
             # perform rmsprop parameter update every batch_size episodes
             if episode_number % batch_size == 0:
+                # reducing the randomness, after each batch
+                randomness = randomness / (((episode_number*1.0) / 100) + 10)
                 print("updating weights of the network")
                 feed_dict = dict(zip(nn.gradients, grad_buffer))
                 _ = sess.run(nn.apply_grads, feed_dict=feed_dict)
@@ -157,9 +149,9 @@ with tf.Session() as sess:
                 #Then close and open Spyder.
                 plt.clf()
                 plt.plot(all_game_scores)
-                plt.title('Tensorflow policy gradient') 
+                plt.title('Tensorflow Q learning') 
                 plt.pause(0.0001)
-                    
+
             # boring book-keeping
             running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
             print('resetting env. episode reward %f. running mean: %f' % (reward_sum, running_reward))

@@ -1,7 +1,10 @@
 """ Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym. """
 import numpy as np
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
 import gym
+import matplotlib.pyplot as plt
+import os
 
 # hyperparameters
 H = 200 # number of hidden layer neurons
@@ -9,20 +12,29 @@ batch_size = 10 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
 render = False
+
+save_freq = 100 # keep zero if you dun want to save model
+plot_freq = 100 # keep zero if you dun want to draw the scores
+
+model_save_path = os.path.join(os.getcwd(),'model_karpathy_policyGrad','save.p')
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
-if resume:
-  model = pickle.load(open('save.p', 'rb'))
-else:
+
+try:
+  model = pickle.load(open(model_save_path, 'rb'))
+  print("using the saved model")
+except:
+  if not os.path.exists(os.path.dirname(model_save_path)):
+    os.makedirs(os.path.dirname(model_save_path))
+  print("making new model")
   model = {}
   model['W1'] = np.random.randn(H,D) / np.sqrt(D) # "Xavier" initialization
   model['W2'] = np.random.randn(H) / np.sqrt(H)
   
-grad_buffer = { k : np.zeros_like(v) for k,v in model.iteritems() } # update buffers that add up gradients over a batch
-rmsprop_cache = { k : np.zeros_like(v) for k,v in model.iteritems() } # rmsprop memory
+grad_buffer = { k : np.zeros_like(v) for k,v in model.items() } # update buffers that add up gradients over a batch
+rmsprop_cache = { k : np.zeros_like(v) for k,v in model.items() } # rmsprop memory
 
 def sigmoid(x): 
   return 1.0 / (1.0 + np.exp(-x)) # sigmoid "squashing" function to interval [0,1]
@@ -71,7 +83,7 @@ def policy_backward(eph, epdlogp):
 env = gym.make("Pong-v0")
 observation = env.reset()
 prev_x = None # used in computing the difference frame
-xs,hs,dlogps,drs = [],[],[],[]
+xs,hs,dlogps,drs,all_game_scores = [],[],[],[],[]
 running_reward = None
 reward_sum = 0
 episode_number = 0
@@ -121,19 +133,31 @@ while True:
 
     # perform rmsprop parameter update every batch_size episodes
     if episode_number % batch_size == 0:
-      for k,v in model.iteritems():
+      for k,v in model.items():
         g = grad_buffer[k] # gradient
         rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
         model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
         grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+    
+    if (save_freq and not(episode_number%save_freq)):
+      print("saving the model ...")
+      pickle.dump(model, open(model_save_path, 'wb'))
+    if (plot_freq and not(episode_number%plot_freq)):
+      #Tools > preferences > IPython console > Graphics > Graphics backend > Backend: Automatic
+      #Then close and open Spyder.
+      plt.clf()
+      plt.plot(all_game_scores)
+      plt.title('Karpathy policy gradient') 
+      plt.pause(0.0001)
 
     # boring book-keeping
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
     print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
-    if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
+#    if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
+    all_game_scores.append(reward_sum+21.0)
     reward_sum = 0
     observation = env.reset() # reset env
     prev_x = None
 
-  if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
-    print(('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
+#  if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
+#    print(('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
