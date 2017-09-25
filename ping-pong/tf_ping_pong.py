@@ -46,7 +46,7 @@ class neural_network():
             self.gradients.append(w_holder_var)
         
         self.all_gradients = tf.gradients(self.policy_loss,w_variables)
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        optimizer = tf.train.RMSPropOptimizer(decay = decay_rate, learning_rate=learning_rate)
         self.apply_grads = optimizer.apply_gradients(zip(self.gradients,w_variables))
         
         self.saver = tf.train.Saver()
