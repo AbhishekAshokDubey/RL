@@ -52,18 +52,19 @@ using\ (eq.2) \\
 \\
 \\
 L_{op}^{2} = Relu(L_{ip}^{2})\\
-Since\ Relu\ is\ not\ differntiable\ (kink\ at\ x = 0)\ we\ stick\ to\ sub-derivative\\
-
-\frac{\mathrm{d} }{\mathrm{d} x} max(0,x) = \left\{\begin{matrix}
-1 & x>0\\ 
-0 & x \leq 0
+Since\ Relu\ is\ not\ differntiable\ (kink\ at\ 0)\, so we\ stick\ to\ sub-derivative\\
+\\
+Relu(k) = max(0,k)\\
+\frac{\mathrm{d} }{\mathrm{d} k} max(0,k) = \left\{\begin{matrix}
+1 & (k>0\ or\ equivalently\ Relu(k)>0)\\
+0 & (k \leq 0\ or\ equivalently\ Relu(k)=0)
 \end{matrix}\right.\\
 \\
 \\
 substituting\ above\ in\ (eq.4)\\
 \frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) = \left\{\begin{matrix}
-(y_{a} - y_{p}) *  W_{2} & x>0\\ 
-0 & x \leq 0
+(y_{a} - y_{p}) *  W_{2} & L_{op}^{2}>0\\ 
+0 & L_{op}^{2} = 0
 \end{matrix}\right.\ \ \ \ \ \ \leftarrow  \mathbf{(eq.5)}\\
 
 \frac{\partial \ }{\partial W_{1}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) *  \frac{\partial \ }{\partial W_{1}}L_{ip}^{2}\\
@@ -71,6 +72,6 @@ substituting\ above\ in\ (eq.4)\\
 \frac{\partial \ }{\partial W_{1}} P(y|x) = \frac{\partial \ }{\partial L_{ip}^{2}} P(y|x) * x\\
 using (eq.5)\\
 \frac{\partial \ }{\partial W_{1}} P(y|x)  = \left\{\begin{matrix}
-(y_{a} - y_{p}) *  W_{2} * x & x>0\\ 
-0 & x \leq 0
+(y_{a} - y_{p}) *  W_{2} * x & L_{op}^{2}>0\\ 
+0 & L_{op}^{2} = 0
 \end{matrix}\right.\ \ \ \ \ \ \leftarrow  \mathbf{(eq.6)}\\
