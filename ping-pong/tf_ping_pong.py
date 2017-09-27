@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 # hyperparameters
 H = 200 # number of hidden layer neurons
 batch_size = 10 # every how many episodes to do a param update?
-learning_rate = 1e-4
+#learning_rate = 1e-4
+learning_rate = 1e-3
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 render = False
@@ -46,7 +47,8 @@ class neural_network():
             self.gradients.append(w_holder_var)
         
         self.all_gradients = tf.gradients(self.policy_loss,w_variables)
-        optimizer = tf.train.RMSPropOptimizer(decay = decay_rate, learning_rate=learning_rate)
+        #optimizer = tf.train.RMSPropOptimizer(decay = decay_rate, learning_rate=learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         self.apply_grads = optimizer.apply_gradients(zip(self.gradients,w_variables))
         
         self.saver = tf.train.Saver()
