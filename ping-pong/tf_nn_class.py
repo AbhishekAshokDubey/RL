@@ -8,7 +8,7 @@ class neural_network():
         self.output_layer = slim.fully_connected(self.hidden_layer, 1, activation_fn=tf.nn.sigmoid, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=None)
 
         self.actual_actions = tf.placeholder(shape=[None],dtype=tf.int32)
-        self.game_rewards = tf.placeholder(shape=[None],dtype=tf.float32)     
+        self.game_rewards = tf.placeholder(shape=[None,1],dtype=tf.float32)     
         self.comparison = tf.equal(self.actual_actions,tf.constant(1))
         
         # loss_fn = Ya(log(Yp)) + (1-Ya)log(1-Yp)
