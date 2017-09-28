@@ -32,7 +32,7 @@ class neural_network():
         self.output_layer = slim.fully_connected(self.hidden_layer, 1, activation_fn=tf.nn.sigmoid, weights_initializer=tf.contrib.layers.xavier_initializer() ,biases_initializer=None)
 
         self.actual_actions = tf.placeholder(shape=[None],dtype=tf.int32)
-        self.game_rewards = tf.placeholder(shape=[None],dtype=tf.float32)
+        self.game_rewards = tf.placeholder(shape=[None,1],dtype=tf.float32)
         
         comparison = tf.equal(self.actual_actions,tf.constant(1))
         
@@ -139,7 +139,7 @@ with tf.Session() as sess:
             discounted_epr -= np.mean(discounted_epr)
             discounted_epr /= np.std(discounted_epr)
 
-            grads = sess.run(nn.all_gradients, feed_dict = {nn.input_layer: epx, nn.game_rewards:discounted_epr.ravel(), nn.actual_actions: epdlogp.ravel()})
+            grads = sess.run(nn.all_gradients, feed_dict = {nn.input_layer: epx, nn.game_rewards:discounted_epr, nn.actual_actions: epdlogp.ravel()})
             for indx,grad in enumerate(grads):
                 grad_buffer[indx] += grad
                 
