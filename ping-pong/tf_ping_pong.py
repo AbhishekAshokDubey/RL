@@ -36,7 +36,7 @@ class neural_network():
         
         comparison = tf.equal(self.actual_actions,tf.constant(1))
         
-        # loss_fn = Ya(log(Yp)) + (1-Ya)log(Yp)
+        # loss_fn = Ya(log(Yp)) + (1-Ya)log(1-Yp)
         self.log_loss = tf.where(comparison, tf.log(self.output_layer), tf.log(tf.subtract(1.0,self.output_layer)))
         self.policy_loss = -tf.reduce_mean(self.log_loss * self.game_rewards)
         
