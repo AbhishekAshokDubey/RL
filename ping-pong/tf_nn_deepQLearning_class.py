@@ -12,6 +12,12 @@ def pool_layer(in_layer):
 class neural_network():
     def __init__(self, img_dim = 80, action_count = 3, DL_dim = 256, learning_rate= 1e-3):
         self.input_screen = tf.placeholder(shape=[None,img_dim,img_dim],dtype=tf.float32)
+
+        #self.action_taken is same as self.max_rew_action below,
+        #but its here to avoid the mutiple compute of the same
+        self.action_taken = tf.placeholder(shape=[None],dtype=tf.int32)
+        self.updated_q_value = tf.placeholder(shape=[None],dtype=tf.float32) # for the taken action
+		
         self.input_layer = tf.reshape(self.input_screen, [-1, img_dim,img_dim, 1])
         self.conv1 = tf.layers.conv2d(inputs=self.input_layer, filters=32, kernel_size=[8, 8], strides=(4,4), padding="same", activation=tf.nn.relu)
         self.pool1 = pool_layer(self.conv1)
@@ -20,13 +26,15 @@ class neural_network():
         self.conv3 = tf.layers.conv2d(inputs=self.pool2, filters=64, kernel_size=[3, 3], strides=(1,1), padding="same", activation=tf.nn.relu)
         self.pool3 = pool_layer(self.conv3)
         self.flatten_layer = tf.contrib.layers.flatten(self.pool3)
-        #self.dim = tf.shape(self.flatten_layer)[1]
         self.dense_connected_layer = slim.fully_connected(self.flatten_layer, DL_dim, activation_fn=tf.nn.relu, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=None)
         self.output_layer = slim.fully_connected(self.dense_connected_layer, action_count, activation_fn=tf.nn.sigmoid, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=None)
         self.max_rew_action = tf.argmax(self.output_layer,1)
 
-        self.updated_Q_vaules = tf.placeholder(shape=[None,action_count], dtype=tf.float32)
-        self.loss = tf.reduce_mean(tf.square(self.updated_Q_vaules - self.output_layer))
+        # feel free to use tf.gather instead of tf.one_hot
+        self.action_taken_onehot = tf.one_hot(indices=self.action_taken, depth=action_count, on_value=1.0, off_value=0.0, axis=-1)
+        self.old_q_value = tf.reduce_sum(tf.multiply(self.output_layer, self.action_taken_onehot), reduction_indices = 1)
+
+        self.loss = tf.reduce_sum(tf.square(self.updated_q_value - self.old_q_value))
         
         self.w_variables = tf.trainable_variables()
         self.opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
