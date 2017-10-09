@@ -9,7 +9,7 @@ The neural network:
 
 As always we want to maximize the probability of output (up/down action) given input (game state)
 
-![aim](https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5C%5C%20max%5C%20P%28Y%7CX%29%5C%5C%20max%5C%20%5Csum_%7Bi%7D%5E%7BN%7D%20P%28y_%7Bi%7D%7Cx_%7Bi%7D%29%5C%5C%20P%28y%3Dy_%7Ba%7D%7Cx%29%20%3D%20y_%7Ba%7Dlog%28y_%7Bp%7D%29%20&plus;%20%281-y_%7Ba%7D%29log%281-y_%7Bp%7D%29%5C%5C)
+![aim](https://latex.codecogs.com/gif.latex?%5C%5C%20max%5C%20P%28Y%7CX%29%5C%5C%20max%5C%20%5Csum_%7Bi%7D%5E%7BN%7D%20P%28y_%7Bi%7D%7Cx_%7Bi%7D%29%5C%5C%20P%28y%3Dy_%7Ba%7D%7Cx%29%20%3D%20y_%7Ba%7Dlog%28y_%7Bp%7D%29%20&plus;%20%281-y_%7Ba%7D%29log%281-y_%7Bp%7D%29%5C%5C)
 
 For ease of discussion lets drop the ![sum_icon](https://latex.codecogs.com/png.latex?%5Cdpi%7B50%7D%20%5Csum) and, consider only one example
 
